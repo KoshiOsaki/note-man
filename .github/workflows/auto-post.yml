@@ -23,8 +23,11 @@ jobs:
       - name: 依存パッケージのインストール
         run: npm ci
       
+      - name: TypeScriptのビルド
+        run: npm run build
+      
       - name: 自動投稿スクリプトの実行
-        run: node post_note.js
+        run: node dist/index.js
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           NOTE_USER: ${{ secrets.NOTE_USER }}

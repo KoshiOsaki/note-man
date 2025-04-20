@@ -3,6 +3,7 @@
 ## 概要
 - Gemini API を使って記事を自動生成し、Puppeteer 経由で Note へ投稿する PoC ツールです。  
 - GitHub Actions で毎朝 8:00 JST に自動実行します。
+- TypeScript で実装されており、モジュール化された構造になっています。
 
 ---
 
@@ -32,13 +33,29 @@
 
 3. 依存パッケージをインストール
    ```bash
-   npm ci
+   npm install
+   ```
+
+4. TypeScriptをビルド
+   ```bash
+   npm run build
    ```
 
 ## 実行方法
 ### ローカル実行
 ```bash
-node post_note.js
+# 開発モード（ts-nodeで直接実行）
+npm start
+
+# または、ビルド後に実行
+npm run build
+node dist/index.js
+```
+
+### 開発モード
+```bash
+# ファイル変更を監視して自動再起動
+npm run dev
 ```
 
 ### GitHub Actions
@@ -46,11 +63,17 @@ node post_note.js
 
 必要な Secrets（GEMINI_API_KEY、NOTE_USER、NOTE_PASSWORD）を GitHub リポジトリに登録してください。
 
-## Folder Structure
-- `docs/`：仕様書・構成図・タスク管理
-- `default-prompt.md`：記事生成用プロンプト
-- `post_note.js`：自動投稿スクリプト本体
-- `.github/workflows/auto-post.yml`：スケジュール定義
+## プロジェクト構造
+- `src/` - TypeScriptソースコード
+  - `index.ts` - エントリーポイント
+  - `prompt-loader.ts` - プロンプト読み込みモジュール
+  - `article-generator.ts` - Gemini APIによる記事生成
+  - `note-poster.ts` - Puppeteerによるnote投稿
+  - `types.ts` - 型定義
+- `docs/` - 仕様書・構成図・タスク管理
+- `default-prompt.md` - 記事生成用プロンプト
+- `.github/workflows/auto-post.yml` - スケジュール定義
+- `dist/` - ビルド後のJavaScriptファイル（gitignore対象）
 
 ## 運用・トラブルシュート
 ### 投稿に失敗した場合
