@@ -16,7 +16,6 @@
 ├── dist                     # ビルド出力ディレクトリ（gitignore対象）
 ├── default-prompt.md        # 記事生成用プロンプト集
 ├── .env.example             # 環境変数テンプレート
-├── .env                     # 環境変数（gitignore対象）
 ├── .gitignore               # Git除外設定
 ├── tsconfig.json            # TypeScript設定
 ├── package.json             # 依存パッケージ定義
