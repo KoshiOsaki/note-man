@@ -1,0 +1,23 @@
+{
+  "name": "note-man",
+  "version": "1.0.0",
+  "description": "Gemini APIとPuppeteerを使用してNoteへ自動投稿を行うPoC",
+  "main": "post_note.js",
+  "scripts": {
+    "start": "node post_note.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "note",
+    "gemini",
+    "puppeteer",
+    "automation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@google/generative-ai": "^0.1.3",
+    "dotenv": "^16.3.1",
+    "puppeteer": "^21.5.2"
+  }
+}

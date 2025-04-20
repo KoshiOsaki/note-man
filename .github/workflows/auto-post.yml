@@ -1,0 +1,41 @@
+name: 毎日の自動投稿
+
+on:
+  schedule:
+    # 毎日 UTC 23:00 (JST 8:00) に実行
+    - cron: '0 23 * * *'
+  workflow_dispatch:  # 手動実行用トリガー
+
+jobs:
+  post-to-note:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: リポジトリのチェックアウト
+        uses: actions/checkout@v3
+      
+      - name: Node.js のセットアップ
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: 依存パッケージのインストール
+        run: npm ci
+      
+      - name: 自動投稿スクリプトの実行
+        run: node post_note.js
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          NOTE_USER: ${{ secrets.NOTE_USER }}
+          NOTE_PASSWORD: ${{ secrets.NOTE_PASSWORD }}
+      
+      - name: 実行結果の通知
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: note-auto-post
+          SLACK_TITLE: Note自動投稿結果
+          SLACK_MESSAGE: ${{ job.status == 'success' && '✅ 投稿成功しました' || '❌ 投稿に失敗しました' }}
+          SLACK_COLOR: ${{ job.status == 'success' && 'good' || 'danger' }}
