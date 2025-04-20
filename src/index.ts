@@ -35,14 +35,28 @@ const main = async (): Promise<void> => {
     const prompts = loadPrompts();
 
     // 記事の生成（最大3本）
-    const articlePromises = prompts.slice(0, 3).map((prompt) =>
-      // generateWithGemini(prompt, env.GEMINI_API_KEY)
-      generateWithGemini(prompt, "test")
-    );
-    const articles: Article[] = await Promise.all(articlePromises);
+    // const articlePromises = prompts
+    //   .slice(0, 3)
+    //   .map((prompt) => generateWithGemini(prompt, env.GEMINI_API_KEY));
+    // const articles: Article[] = await Promise.all(articlePromises);
+
+    const demoArticles = [
+      {
+        title: "Demo Article 1",
+        content: "This is the content of the first demo article.",
+      },
+      {
+        title: "Demo Article 2",
+        content: "This is the content of the second demo article.",
+      },
+      {
+        title: "Demo Article 3",
+        content: "This is the content of the third demo article.",
+      },
+    ];
 
     // Noteへの投稿
-    await postToNote(articles, env.NOTE_USER, env.NOTE_PASSWORD);
+    await postToNote(demoArticles, env.NOTE_USER, env.NOTE_PASSWORD);
 
     console.log("処理が正常に完了しました");
   } catch (error) {
