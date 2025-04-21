@@ -2,7 +2,7 @@ import puppeteer, { Browser, Page, ElementHandle } from "puppeteer";
 import { Article } from "./types";
 import * as fs from "fs";
 import * as path from "path";
-import { logPageContent, takeScreenshot } from "./utils/scraping";
+import { logPageContent } from "./utils/scraping";
 
 /**
  * Puppeteerを使用してNoteにログインし、記事を投稿する
@@ -113,7 +113,6 @@ export const postToNote = async (
         article.title
       );
       await page.waitForTimeout(1000);
-      await takeScreenshot(page, `article${index + 1}-title-input`);
 
       // 本文入力
       await page.waitForSelector(
@@ -146,7 +145,6 @@ export const postToNote = async (
         await page.waitForSelector('button[aria-label="画像を追加"]');
         await page.click('button[aria-label="画像を追加"]');
         await page.waitForTimeout(2000);
-        await takeScreenshot(page, `article${index + 1}-image-menu-opened`);
 
         // 画像メニューのHTMLをログに出力
         await logPageContent(page, "div.sc-bbcb2b9d-5");
@@ -206,15 +204,10 @@ export const postToNote = async (
         }
 
         await page.waitForTimeout(2000);
-        await takeScreenshot(
-          page,
-          `article${index + 1}-after-select-image-button`
-        );
 
         // 「世界の美術館」タブを選択
         console.log("「世界の美術館」タブを選択しています...");
         // スクリーンショットを撮影して現在の状態を確認
-        await takeScreenshot(page, `article${index + 1}-before-museum-tab`);
 
         try {
           // 標準的なセレクタを使用
@@ -386,6 +379,79 @@ export const postToNote = async (
 
             await page.waitForTimeout(3000);
 
+            // トリミングモーダルが表示されたら「保存」ボタンをクリック
+            try {
+              console.log(
+                "トリミングモーダルの「保存」ボタンを探しています..."
+              );
+
+              // トリミングモーダルが表示されているか確認
+              const isTrimModalVisible = await page.evaluate(() => {
+                const modal = document.querySelector(
+                  ".ReactModal__Content.CropModal__content"
+                );
+                return (
+                  !!modal && window.getComputedStyle(modal).display !== "none"
+                );
+              });
+
+              if (isTrimModalVisible) {
+                console.log("トリミングモーダルが表示されています");
+
+                // 保存ボタンをクリック
+                const saveButtonClicked = await page.evaluate(() => {
+                  // テキストで検索
+                  const buttons = Array.from(
+                    document.querySelectorAll("button")
+                  );
+                  const saveButton = buttons.find(
+                    (button) =>
+                      button.textContent && button.textContent.trim() === "保存"
+                  );
+
+                  if (saveButton) {
+                    saveButton.click();
+                    return true;
+                  }
+
+                  // IDで検索
+                  const idButton = document.querySelector("#\\:rj\\:");
+                  if (idButton) {
+                    (idButton as HTMLElement).click();
+                    return true;
+                  }
+
+                  // spanで検索
+                  const saveSpan = document.querySelector("span#\\:rk\\:");
+                  if (saveSpan && saveSpan.parentElement) {
+                    (saveSpan.parentElement as HTMLElement).click();
+                    return true;
+                  }
+
+                  return false;
+                });
+
+                if (saveButtonClicked) {
+                  console.log(
+                    "トリミングモーダルの「保存」ボタンをクリックしました"
+                  );
+                } else {
+                  console.log(
+                    "トリミングモーダルの「保存」ボタンが見つかりませんでした"
+                  );
+                }
+
+                await page.waitForTimeout(2000);
+              } else {
+                console.log("トリミングモーダルは表示されていません");
+              }
+            } catch (trimError: any) {
+              console.error(
+                "トリミングモーダル処理中にエラーが発生しました:",
+                trimError.message
+              );
+            }
+
             console.log("ギャラリーから画像を挿入しました");
           } else {
             console.warn("利用可能な画像が見つかりませんでした");
@@ -403,36 +469,119 @@ export const postToNote = async (
 
       // タグを追加
       try {
-        console.log("タグを追加中...");
-        // タグ入力欄を探してクリック
-        const tagInputSelector =
-          'input[placeholder="ハッシュタグを追加する"], section:nth-of-type(1) input';
-        await page.waitForSelector(tagInputSelector);
-        await page.click(tagInputSelector);
-        await page.waitForTimeout(500);
+        // 「公開に進む」ボタンをクリック
+        await page.waitForTimeout(5000); // 画像の読み込みを待つ
 
-        // タグを入力（#を含む）
-        const tag = `#${article.title.split(" ")[0]}`;
-        await page.type(tagInputSelector, tag);
-        await page.waitForTimeout(1000);
+        const publishNextClicked = await page.evaluate(() => {
+          // テキストで検索
+          const buttons = Array.from(document.querySelectorAll("button"));
+          const publishButton = buttons.find(
+            (button) =>
+              button.textContent && button.textContent.includes("公開に進む")
+          );
 
-        // 入力エリア外をクリックしてタグ候補を表示
-        await page.click("div.md\\:flex");
-        await page.waitForTimeout(1000);
+          if (publishButton) {
+            publishButton.click();
+            return true;
+          }
 
-        // 候補から最初のタグを選択
-        const tagSuggestionSelector =
-          '#__next li:nth-of-type(1), li:has-text("件")';
-        await page.waitForSelector(tagSuggestionSelector);
-        await page.click(tagSuggestionSelector);
-        await page.waitForTimeout(1000);
+          // spanで検索
+          const publishSpan = document.querySelector(
+            "span#\\:ra\\:, span:contains('公開に進む')"
+          );
+          if (publishSpan && publishSpan.parentElement) {
+            (publishSpan.parentElement as HTMLElement).click();
+            return true;
+          }
 
-        console.log(`タグ「${tag}」を追加しました`);
-      } catch (tagError) {
-        console.error("タグ追加中にエラーが発生しました:", tagError);
+          return false;
+        });
+
+        if (publishNextClicked) {
+          console.log("「公開に進む」ボタンをクリックしました");
+        } else {
+          console.warn("「公開に進む」ボタンが見つかりませんでした");
+        }
+
+        await page.waitForTimeout(3000);
+
+        // ハッシュタグ入力欄を待機
+        await page.waitForSelector(
+          "input[placeholder='ハッシュタグを追加する'], section:nth-of-type(1) input",
+          { timeout: 30000 }
+        );
+
+        // タグを入力（article.tagListから取得）
+        if (article.tagList && article.tagList.length > 0) {
+          for (const tag of article.tagList) {
+            console.log(`タグを追加: ${tag}`);
+
+            await page.focus(
+              "input[placeholder='ハッシュタグを追加する'], section:nth-of-type(1) input"
+            );
+            await page.keyboard.type(tag);
+            await page.keyboard.press("Enter");
+            await page.waitForTimeout(1000);
+          }
+
+          console.log("タグの追加が完了しました");
+        } else {
+          console.log("追加するタグがありません");
+        }
+
+        // 「投稿する」ボタンをクリック
+        console.log("「投稿する」ボタンをクリックします...");
+
+        const publishButtonClicked = await page.evaluate(() => {
+          // テキストで検索
+          const buttons = Array.from(document.querySelectorAll("button"));
+          const publishButton = buttons.find(
+            (button) =>
+              button.textContent && button.textContent.includes("投稿する")
+          );
+
+          if (publishButton) {
+            publishButton.click();
+            return true;
+          }
+
+          // 新しいセレクタで検索（ヘッダーの投稿するボタン）
+          const headerPublishButton = document.querySelector(
+            "button#\\:r19\\:, span#\\:r1a\\:"
+          );
+          if (headerPublishButton) {
+            if (
+              headerPublishButton.tagName === "SPAN" &&
+              headerPublishButton.parentElement
+            ) {
+              (headerPublishButton.parentElement as HTMLElement).click();
+            } else {
+              (headerPublishButton as HTMLElement).click();
+            }
+            return true;
+          }
+
+          // テキスト内容で検索する別の方法
+          const allButtons = Array.from(document.querySelectorAll("button"));
+          const publishBtn = allButtons.find((button) => {
+            const buttonText = button.textContent || "";
+            return buttonText.includes("投稿する");
+          });
+
+          if (publishBtn) {
+            publishBtn.click();
+            return true;
+          }
+
+          return false;
+        });
+
+        await page.waitForTimeout(5000);
+      } catch (tagError: any) {
+        console.error("タグ追加中にエラーが発生しました:", tagError.message);
       }
 
-      // 投稿ボタンをクリック
+      // 投稿ボタンクリック
       console.log("投稿ボタンクリック...");
       await page.waitForSelector("button:has-text('公開に進む')");
       await logPageContent(page, "button:has-text('公開に進む')");

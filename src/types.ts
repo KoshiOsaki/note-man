@@ -4,6 +4,7 @@
 export interface Article {
   title: string;
   content: string;
+  tagList: string[];
 }
 
 /**

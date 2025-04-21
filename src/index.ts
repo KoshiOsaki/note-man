@@ -44,14 +44,17 @@ const main = async (): Promise<void> => {
       {
         title: "Demo Article 1",
         content: "This is the content of the first demo article.",
+        tagList: ["test"],
       },
       {
         title: "Demo Article 2",
         content: "This is the content of the second demo article.",
+        tagList: ["test"],
       },
       {
         title: "Demo Article 3",
         content: "This is the content of the third demo article.",
+        tagList: ["test"],
       },
     ];
 
