@@ -27,7 +27,6 @@ export const postToNote = async (
     await page.setViewport({ width: 1280, height: 800 });
 
     // Noteにログイン
-    console.log("Noteにログイン中...");
     await page.goto("https://note.com/login");
     await page.waitForTimeout(1000); // ページ読み込み後1秒待機
 
@@ -73,7 +72,6 @@ export const postToNote = async (
       await page.click(textPostSelector);
 
       // エディターページへの遷移を待機
-      console.log("エディターページへ遷移中...");
       await page.waitForNavigation({
         waitUntil: "networkidle0",
         timeout: 60000,
@@ -100,10 +98,6 @@ export const postToNote = async (
       await page.waitForSelector(
         "textarea.cfYOJX, textarea[placeholder='記事タイトル']",
         { timeout: 30000 }
-      );
-      await logPageContent(
-        page,
-        "textarea.cfYOJX, textarea[placeholder='記事タイトル']"
       );
       await page.waitForTimeout(300);
       await page.focus("textarea.cfYOJX, textarea[placeholder='記事タイトル']");
@@ -158,8 +152,6 @@ export const postToNote = async (
         await page.waitForTimeout(2000);
 
         // 「世界の美術館」タブを選択
-        console.log("「世界の美術館」タブを選択しています...");
-        // スクリーンショットを撮影して現在の状態を確認
 
         try {
           // 標準的なセレクタを使用
