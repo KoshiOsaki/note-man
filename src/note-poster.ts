@@ -114,20 +114,6 @@ export const postToNote = async (
       );
       await page.waitForTimeout(1000);
 
-      // 本文入力
-      await page.waitForSelector(
-        "div.ProseMirror[contenteditable='true'][role='textbox']",
-        { timeout: 30000 }
-      );
-      await logPageContent(
-        page,
-        "div.ProseMirror[contenteditable='true'][role='textbox']"
-      );
-      await page.waitForTimeout(1000);
-      await page.click(
-        "div.ProseMirror[contenteditable='true'][role='textbox']"
-      );
-
       // 本文を直接入力（Markdownモードを使用しない）
       await page.waitForSelector(
         "div.ProseMirror[contenteditable='true'][role='textbox']"
@@ -139,69 +125,35 @@ export const postToNote = async (
       await page.waitForTimeout(1000);
 
       // 画像をギャラリーから挿入
-      console.log("ギャラリーから画像を挿入中...");
       try {
         // 画像追加ボタンをクリック
         await page.waitForSelector('button[aria-label="画像を追加"]');
         await page.click('button[aria-label="画像を追加"]');
         await page.waitForTimeout(2000);
 
-        // 画像メニューのHTMLをログに出力
-        await logPageContent(page, "div.sc-bbcb2b9d-5");
-
         // 「記事にあう画像を選ぶ」ボタンをクリック - セレクタを複数用意して試す
-        console.log("「記事にあう画像を選ぶ」ボタンを探しています...");
 
         // 複数のセレクタを試す
-        const imageSelectButtonSelectors = [
-          // クラス名とテキストで特定
-          'div.sc-bbcb2b9d-8:has-text("記事にあう画像を選ぶ")',
-          // 親要素から特定
-          'button.sc-bbcb2b9d-7:has(div:has-text("記事にあう画像を選ぶ"))',
-          // SVGアイコンを含むボタン
-          'button:has(svg[data-src="/icons/image.svg"]):has(div:has-text("記事にあう画像を選ぶ"))',
-          // 単純なテキスト検索
-          'button:has-text("記事にあう画像を選ぶ")',
-          // nth-childで特定
-          "div.sc-bbcb2b9d-6:nth-child(2) button",
-        ];
+        const imageSelectButtonSelector =
+          "div.sc-bbcb2b9d-6:nth-child(2) button";
+        await page.waitForSelector(imageSelectButtonSelector);
+        await page.click(imageSelectButtonSelector);
 
-        // 各セレクタを順番に試す
-        let buttonFound = false;
-        for (const selector of imageSelectButtonSelectors) {
-          try {
-            console.log(`セレクタを試行: ${selector}`);
-            const button = await page.$(selector);
-            if (button) {
-              console.log(`セレクタが見つかりました: ${selector}`);
-              await button.click();
-              buttonFound = true;
-              console.log("「記事にあう画像を選ぶ」ボタンをクリックしました");
-              break;
-            }
-          } catch (err: any) {
-            console.log(`セレクタ ${selector} でエラー: ${err.message}`);
+        // JavaScriptで直接クリックを試みる
+        await page.evaluate(() => {
+          const buttons = Array.from(document.querySelectorAll("button"));
+          const imageButton = buttons.find(
+            (button) =>
+              button.textContent &&
+              button.textContent.includes("記事にあう画像を選ぶ")
+          );
+          if (imageButton) {
+            console.log("JavaScriptでボタンを見つけました");
+            imageButton.click();
+            return true;
           }
-        }
-
-        if (!buttonFound) {
-          console.error("「記事にあう画像を選ぶ」ボタンが見つかりませんでした");
-          // JavaScriptで直接クリックを試みる
-          await page.evaluate(() => {
-            const buttons = Array.from(document.querySelectorAll("button"));
-            const imageButton = buttons.find(
-              (button) =>
-                button.textContent &&
-                button.textContent.includes("記事にあう画像を選ぶ")
-            );
-            if (imageButton) {
-              console.log("JavaScriptでボタンを見つけました");
-              imageButton.click();
-              return true;
-            }
-            return false;
-          });
-        }
+          return false;
+        });
 
         await page.waitForTimeout(2000);
 
@@ -345,7 +297,6 @@ export const postToNote = async (
             await page.waitForTimeout(1000);
 
             // 「この画像を挿入」ボタンをクリック
-            console.log("「この画像を挿入」ボタンを探しています...");
             // 標準的なセレクタとJavaScriptの組み合わせ
             const insertButtonClicked = await page.evaluate(() => {
               // テキストで検索
@@ -470,7 +421,7 @@ export const postToNote = async (
       // タグを追加
       try {
         // 「公開に進む」ボタンをクリック
-        await page.waitForTimeout(5000); // 画像の読み込みを待つ
+        await page.waitForTimeout(9000); // 画像の読み込みを待つ
 
         const publishNextClicked = await page.evaluate(() => {
           // テキストで検索
@@ -514,8 +465,6 @@ export const postToNote = async (
         // タグを入力（article.tagListから取得）
         if (article.tagList && article.tagList.length > 0) {
           for (const tag of article.tagList) {
-            console.log(`タグを追加: ${tag}`);
-
             await page.focus(
               "input[placeholder='ハッシュタグを追加する'], section:nth-of-type(1) input"
             );
@@ -523,15 +472,9 @@ export const postToNote = async (
             await page.keyboard.press("Enter");
             await page.waitForTimeout(1000);
           }
-
-          console.log("タグの追加が完了しました");
-        } else {
-          console.log("追加するタグがありません");
         }
 
         // 「投稿する」ボタンをクリック
-        console.log("「投稿する」ボタンをクリックします...");
-
         const publishButtonClicked = await page.evaluate(() => {
           // テキストで検索
           const buttons = Array.from(document.querySelectorAll("button"));
@@ -580,20 +523,6 @@ export const postToNote = async (
       } catch (tagError: any) {
         console.error("タグ追加中にエラーが発生しました:", tagError.message);
       }
-
-      // 投稿ボタンクリック
-      console.log("投稿ボタンクリック...");
-      await page.waitForSelector("button:has-text('公開に進む')");
-      await logPageContent(page, "button:has-text('公開に進む')");
-      await page.waitForTimeout(1000);
-      await page.click("button:has-text('公開に進む')");
-
-      // 公開設定ダイアログでの「公開」ボタンをクリック
-      console.log("公開設定ダイアログの公開ボタンクリック...");
-      await page.waitForSelector("button:has-text('公開する')");
-      await logPageContent(page, "button:has-text('公開する')");
-      await page.waitForTimeout(1000);
-      await page.click("button:has-text('公開する')");
 
       // 投稿完了を待機
       console.log("投稿処理中...");
