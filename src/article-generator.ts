@@ -39,12 +39,13 @@ ${prompt}`,
     let content = text.replace(/^#\s+.+?$|^.+?[\n\r]/m, "").trim();
 
     console.log(`記事「${title}」を生成しました`);
-    return { title, content };
+    return { title, content, tagList: [] };
   } catch (error) {
     console.error("Gemini APIでの記事生成に失敗しました:", error);
     return {
       title: "エラー発生",
       content: "APIエラーが発生したため記事を生成できませんでした。",
+      tagList: [],
     };
   }
 };
