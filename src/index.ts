@@ -1,8 +1,9 @@
 import "dotenv/config";
 import { generateWithGemini } from "./article-generator";
 import { postToNote } from "./note-poster";
-import { Article, EnvConfig } from "./types";
-import { loadPrompt } from "./prompt-loader";
+import { EnvConfig } from "./types";
+import { generatePrompt } from "./prompt-loader";
+import { fetchTrends } from "./utils/x-trend";
 
 /**
  * 環境変数の検証
@@ -31,35 +32,26 @@ const main = async (): Promise<void> => {
     // 環境変数の検証
     const env = validateEnv();
 
-    // プロンプトの読み込み
-    const prompt = loadPrompt();
+    // Xのトレンドを取得
+    const trends = await fetchTrends();
+    console.log("トレンドを取得しました:", trends);
+
+    // プロンプトの生成
+    const customPrompt = generatePrompt(trends);
 
     // 記事の生成（最大3本）
-    // const articlePromises = prompts
-    //   .slice(0, 3)
-    //   .map((prompt) => generateWithGemini(prompt, env.GEMINI_API_KEY));
-    // const articles: Article[] = await Promise.all(articlePromises);
+    const article = await generateWithGemini(customPrompt, env.GEMINI_API_KEY);
 
-    const demoArticles = [
-      {
-        title: "Demo Article 1",
-        content: "This is the content of the first demo article.",
-        tagList: ["test"],
-      },
-      // {
-      //   title: "Demo Article 2",
-      //   content: "This is the content of the second demo article.",
-      //   tagList: ["test"],
-      // },
-      // {
-      //   title: "Demo Article 3",
-      //   content: "This is the content of the third demo article.",
-      //   tagList: ["test"],
-      // },
-    ];
+    // const demoArticles = [
+    //   {
+    //     title: "Demo Article 1",
+    //     content: "This is the content of the first demo article.",
+    //     tagList: ["test"],
+    //   },
+    // ];
 
     // Noteへの投稿
-    await postToNote(demoArticles, env.NOTE_USER, env.NOTE_PASSWORD);
+    await postToNote([article], env.NOTE_USER, env.NOTE_PASSWORD);
 
     console.log("処理が正常に完了しました");
   } catch (error) {

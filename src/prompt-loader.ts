@@ -23,9 +23,26 @@ import path from "path";
 //   }
 // };
 
-export const loadPrompt = (): string => {
-  const promptPath = path.join(process.cwd(), "default-prompt.md");
-  const promptContent = readFileSync(promptPath, "utf8");
+export const generatePrompt = (trends: string[]): string => {
+  try {
+    const promptPath = path.join(process.cwd(), "default-prompt.md");
+    const defaultPrompt = readFileSync(promptPath, "utf8");
 
-  return promptContent;
+    // トレンドリストを文字列に変換
+    const trendListText = trends
+      .map((trend, index) => `${index + 1}. ${trend}`)
+      .join("\n");
+
+    // トレンド選択と記事作成の指示を追加
+    const fullPrompt = `${defaultPrompt}
+
+以下は現在のXのトレンドワードです：
+${trendListText}
+`;
+
+    return fullPrompt;
+  } catch (error) {
+    console.error("プロンプトファイルの読み込みに失敗しました:", error);
+    throw new Error("プロンプト生成に失敗しました");
+  }
 };

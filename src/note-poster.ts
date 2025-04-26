@@ -1,8 +1,5 @@
 import puppeteer, { Browser, Page, ElementHandle } from "puppeteer";
 import { Article } from "./types";
-import * as fs from "fs";
-import * as path from "path";
-import { logPageContent } from "./utils/scraping";
 
 /**
  * Puppeteerを使用してNoteにログインし、記事を投稿する
