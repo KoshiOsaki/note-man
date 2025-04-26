@@ -14,6 +14,7 @@ export const postToNote = async (
   const browser: Browser = await puppeteer.launch({
     headless: "new",
     // headless: false, // ブラウザウィンドウを表示
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
