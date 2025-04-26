@@ -12,8 +12,8 @@ export const postToNote = async (
   console.log("Noteへの投稿を開始します...");
 
   const browser: Browser = await puppeteer.launch({
-    // headless: "new",
-    headless: false, // ブラウザウィンドウを表示
+    headless: "new",
+    // headless: false, // ブラウザウィンドウを表示
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
