@@ -1,8 +1,8 @@
 import "dotenv/config";
-import { loadPrompts } from "./prompt-loader";
 import { generateWithGemini } from "./article-generator";
 import { postToNote } from "./note-poster";
 import { Article, EnvConfig } from "./types";
+import { loadPrompt } from "./prompt-loader";
 
 /**
  * 環境変数の検証
@@ -32,7 +32,7 @@ const main = async (): Promise<void> => {
     const env = validateEnv();
 
     // プロンプトの読み込み
-    const prompts = loadPrompts();
+    const prompt = loadPrompt();
 
     // 記事の生成（最大3本）
     // const articlePromises = prompts
@@ -46,16 +46,16 @@ const main = async (): Promise<void> => {
         content: "This is the content of the first demo article.",
         tagList: ["test"],
       },
-      {
-        title: "Demo Article 2",
-        content: "This is the content of the second demo article.",
-        tagList: ["test"],
-      },
-      {
-        title: "Demo Article 3",
-        content: "This is the content of the third demo article.",
-        tagList: ["test"],
-      },
+      // {
+      //   title: "Demo Article 2",
+      //   content: "This is the content of the second demo article.",
+      //   tagList: ["test"],
+      // },
+      // {
+      //   title: "Demo Article 3",
+      //   content: "This is the content of the third demo article.",
+      //   tagList: ["test"],
+      // },
     ];
 
     // Noteへの投稿

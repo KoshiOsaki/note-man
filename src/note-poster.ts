@@ -245,7 +245,6 @@ export const postToNote = async (
         await page.waitForTimeout(2000);
 
         // 画像一覧から1つをランダムに選択（1〜10番目から）
-        console.log("画像を選択しています...");
         try {
           // 標準的なセレクタを使用
           const imageItemSelectors = [
