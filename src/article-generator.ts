@@ -34,12 +34,13 @@ ${prompt}`,
     const title = titleMatch
       ? (titleMatch[1] || titleMatch[2]).trim()
       : "無題の記事";
+    const removedTitle = title.replace(/^#*\s*/, "");
 
     // タイトル行を除いた残りを本文とする
     let content = text.replace(/^#\s+.+?$|^.+?[\n\r]/m, "").trim();
 
-    console.log(`記事「${title}」を生成しました`);
-    return { title, content, tagList: [] };
+    console.log(`記事「${removedTitle}」を生成しました`);
+    return { title: removedTitle, content, tagList: [] };
   } catch (error) {
     console.error("Gemini APIでの記事生成に失敗しました:", error);
     return {
