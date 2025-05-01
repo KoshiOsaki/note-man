@@ -396,111 +396,145 @@ export const postToNote = async (
       // エラー発生時もスクリーンショットを撮影
     }
 
-    // タグを追加
-    try {
-      // 「公開に進む」ボタンをクリック
-      await page.waitForTimeout(9000); // 画像の読み込みを待つ
+    // 「公開に進む」ボタンをクリック
+    await page.waitForTimeout(15000); // 画像の読み込みを待つ
 
-      const publishNextClicked = await page.evaluate(() => {
-        // テキストで検索
-        const buttons = Array.from(document.querySelectorAll("button"));
-        const publishButton = buttons.find(
-          (button) =>
-            button.textContent && button.textContent.includes("公開に進む")
-        );
-
-        if (publishButton) {
-          publishButton.click();
-          return true;
-        }
-
-        // spanで検索
-        const publishSpan = document.querySelector(
-          "span#\\:ra\\:, span:contains('公開に進む')"
-        );
-        if (publishSpan && publishSpan.parentElement) {
-          (publishSpan.parentElement as HTMLElement).click();
-          return true;
-        }
-
-        return false;
-      });
-
-      if (publishNextClicked) {
-        console.log("「公開に進む」ボタンをクリックしました");
-      } else {
-        console.warn("「公開に進む」ボタンが見つかりませんでした");
-      }
-
-      await page.waitForTimeout(3000);
-
-      // ハッシュタグ入力欄を待機
-      await page.waitForSelector(
-        "input[placeholder='ハッシュタグを追加する'], section:nth-of-type(1) input",
-        { timeout: 30000 }
+    const publishNextClicked = await page.evaluate(() => {
+      // テキストで検索
+      const buttons = Array.from(document.querySelectorAll("button"));
+      const publishButton = buttons.find(
+        (button) =>
+          button.textContent && button.textContent.includes("公開に進む")
       );
 
-      // タグを入力（article.tagListから取得）
-      if (article.tagList && article.tagList.length > 0) {
-        for (const tag of article.tagList) {
-          await page.focus(
-            "input[placeholder='ハッシュタグを追加する'], section:nth-of-type(1) input"
-          );
-          await page.keyboard.type(tag);
-          await page.keyboard.press("Enter");
-          await page.waitForTimeout(1000);
-        }
+      if (publishButton) {
+        publishButton.click();
+        return true;
       }
 
-      // 「投稿する」ボタンをクリック
-      const publishButtonClicked = await page.evaluate(() => {
-        // テキストで検索
-        const buttons = Array.from(document.querySelectorAll("button"));
-        const publishButton = buttons.find(
-          (button) =>
-            button.textContent && button.textContent.includes("投稿する")
-        );
-
-        if (publishButton) {
-          publishButton.click();
-          return true;
+      // 新しいセレクタで検索（ヘッダーの投稿するボタン）
+      const headerPublishButton = document.querySelector(
+        "button#\\:r19\\:, span#\\:r1a\\:"
+      );
+      if (headerPublishButton) {
+        if (
+          headerPublishButton.tagName === "SPAN" &&
+          headerPublishButton.parentElement
+        ) {
+          (headerPublishButton.parentElement as HTMLElement).click();
+        } else {
+          (headerPublishButton as HTMLElement).click();
         }
+        return true;
+      }
 
-        // 新しいセレクタで検索（ヘッダーの投稿するボタン）
-        const headerPublishButton = document.querySelector(
-          "button#\\:r19\\:, span#\\:r1a\\:"
-        );
-        if (headerPublishButton) {
-          if (
-            headerPublishButton.tagName === "SPAN" &&
-            headerPublishButton.parentElement
-          ) {
-            (headerPublishButton.parentElement as HTMLElement).click();
-          } else {
-            (headerPublishButton as HTMLElement).click();
-          }
-          return true;
-        }
-
-        // テキスト内容で検索する別の方法
-        const allButtons = Array.from(document.querySelectorAll("button"));
-        const publishBtn = allButtons.find((button) => {
-          const buttonText = button.textContent || "";
-          return buttonText.includes("投稿する");
-        });
-
-        if (publishBtn) {
-          publishBtn.click();
-          return true;
-        }
-
-        return false;
+      // テキスト内容で検索する別の方法
+      const allButtons = Array.from(document.querySelectorAll("button"));
+      const publishBtn = allButtons.find((button) => {
+        const buttonText = button.textContent || "";
+        return buttonText.includes("公開に進む");
       });
 
-      await page.waitForTimeout(5000);
-    } catch (tagError: any) {
-      console.error("タグ追加中にエラーが発生しました:", tagError.message);
+      if (publishBtn) {
+        publishBtn.click();
+        return true;
+      }
+
+      return false;
+    });
+
+    await page.waitForTimeout(3000);
+
+    // ハッシュタグ入力欄を待機
+    await page.waitForSelector(
+      "input[placeholder='ハッシュタグを追加する'], section:nth-of-type(1) input",
+      { timeout: 30000 }
+    );
+
+    // タグボタンのセレクタ
+    const tagButtonSelector = "button.sc-136c6acc-2";
+
+    // タグボタンが存在するか確認
+    const hasTagButtons = await page.$(tagButtonSelector);
+
+    if (hasTagButtons) {
+      // 画面上のタグボタンを取得して最大3つクリック
+      const tagButtons = await page.$$(tagButtonSelector);
+      console.log(`タグボタン数: ${tagButtons.length}`);
+
+      // 最大3つのタグをクリック
+      const maxTags = Math.min(3, tagButtons.length);
+      for (let i = 0; i < maxTags; i++) {
+        // ボタンのテキストを取得してログ出力
+        const buttonText = await page.evaluate(
+          (el) => el.textContent,
+          tagButtons[i]
+        );
+        console.log(`タグ「${buttonText}」をクリックします`);
+
+        // ボタンをクリック
+        await tagButtons[i].click();
+        await page.waitForTimeout(1000);
+      }
+    } else if (article.tagList && article.tagList.length > 0) {
+      // タグボタンがない場合は従来の方法でタグを入力
+      console.log(`タグリストからタグを入力: ${article.tagList.join(", ")}`);
+      for (const tag of article.tagList) {
+        await page.focus(
+          "input[placeholder='ハッシュタグを追加する'], section:nth-of-type(1) input"
+        );
+        await page.keyboard.type(tag);
+        await page.keyboard.press("Enter");
+        await page.waitForTimeout(1000);
+      }
     }
+
+    // 「投稿する」ボタンをクリック
+    const publishButtonClicked = await page.evaluate(() => {
+      // テキストで検索
+      const buttons = Array.from(document.querySelectorAll("button"));
+      const publishButton = buttons.find(
+        (button) =>
+          button.textContent && button.textContent.includes("投稿する")
+      );
+
+      if (publishButton) {
+        publishButton.click();
+        return true;
+      }
+
+      // 新しいセレクタで検索（ヘッダーの投稿するボタン）
+      const headerPublishButton = document.querySelector(
+        "button#\\:r19\\:, span#\\:r1a\\:"
+      );
+      if (headerPublishButton) {
+        if (
+          headerPublishButton.tagName === "SPAN" &&
+          headerPublishButton.parentElement
+        ) {
+          (headerPublishButton.parentElement as HTMLElement).click();
+        } else {
+          (headerPublishButton as HTMLElement).click();
+        }
+        return true;
+      }
+
+      // テキスト内容で検索する別の方法
+      const allButtons = Array.from(document.querySelectorAll("button"));
+      const publishBtn = allButtons.find((button) => {
+        const buttonText = button.textContent || "";
+        return buttonText.includes("投稿する");
+      });
+
+      if (publishBtn) {
+        publishBtn.click();
+        return true;
+      }
+
+      return false;
+    });
+
+    await page.waitForTimeout(5000);
 
     // 投稿完了を待機
     // 「記事をシェアしてみましょう」というテキストが表示されるのを待つ
