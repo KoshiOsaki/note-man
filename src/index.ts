@@ -40,18 +40,21 @@ const main = async (): Promise<void> => {
     const customPrompt = generatePrompt(trends);
 
     // 記事の生成（最大3本）
-    const article = await generateWithGemini(customPrompt, env.GEMINI_API_KEY);
+    const article = await (async () => {
+      if (process.env.NODE_ENV === "demo") {
+        return {
+          title: "Demo Article 1",
+          content: "This is the content of the first demo article.",
+          tagList: ["test"],
+        };
+      }
+      return await generateWithGemini(customPrompt, env.GEMINI_API_KEY);
+    })();
 
-    // const demoArticles = [
-    //   {
-    //     title: "Demo Article 1",
-    //     content: "This is the content of the first demo article.",
-    //     tagList: ["test"],
-    //   },
-    // ];
+    const articles = [article];
 
     // Noteへの投稿
-    await postToNote([article], env.NOTE_USER, env.NOTE_PASSWORD);
+    await postToNote(articles, env.NOTE_USER, env.NOTE_PASSWORD);
 
     console.log("処理が正常に完了しました");
   } catch (error) {

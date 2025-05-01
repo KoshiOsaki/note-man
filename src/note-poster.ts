@@ -11,9 +11,12 @@ export const postToNote = async (
 ): Promise<void> => {
   console.log("Noteへの投稿を開始します...");
 
+  const isLocal =
+    process.env.NODE_ENV === "local" || process.env.NODE_ENV === "demo";
+
   const browser: Browser = await puppeteer.launch({
-    headless: "new",
-    // headless: false, // ブラウザウィンドウを表示
+    // localの場合はブラウザを開く
+    headless: isLocal ? false : "new",
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
