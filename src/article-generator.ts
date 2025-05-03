@@ -34,7 +34,10 @@ ${prompt}`,
     const title = titleMatch
       ? (titleMatch[1] || titleMatch[2]).trim()
       : "無題の記事";
-    const removedTitle = title.replace(/^#*\s*/, "");
+    // Markdownの#記号とスペースを削除
+    let removedTitle = title.replace(/^#*\s*/, "");
+    // 「タイトル：」を削除
+    removedTitle = removedTitle.replace(/^タイトル：\s*/, "");
 
     // タイトル行を除いた残りを本文とする
     let content = text.replace(/^#\s+.+?$|^.+?[\n\r]/m, "").trim();
