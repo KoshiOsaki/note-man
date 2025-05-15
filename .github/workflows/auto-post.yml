@@ -1,9 +1,9 @@
 name: 毎日の自動投稿
 
 on:
-  schedule:
-    # 毎日 UTC 23:00 (JST 8:00) に実行
-    - cron: "0 23 * * *"
+  # schedule:
+  #   # 毎日 UTC 23:00 (JST 8:00) に実行
+  #   - cron: "0 23 * * *"
   workflow_dispatch: # 手動実行用トリガー
 
 jobs:
